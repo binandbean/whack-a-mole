@@ -12,6 +12,7 @@ const saveRankBtn = document.querySelector("#saveRankBtn");
 const clearRankBtn = document.querySelector("#clearRankBtn");
 const rankListEl = document.querySelector("#rankList");
 const rankStatusEl = document.querySelector("#rankStatus");
+const rankTabs = [...document.querySelectorAll(".rank-tab")];
 
 const settings = {
   easy: { showFor: 760, delay: 360, duration: 30, label: "쉬움" },
@@ -30,6 +31,7 @@ let running = false;
 let pendingScore = 0;
 let supabaseClient = null;
 let rankings = [];
+let selectedRankMode = "all";
 
 bestScoreEl.textContent = bestScore;
 setupRankingStore();
@@ -105,7 +107,7 @@ function getLocalRankings() {
 }
 
 function saveLocalRankings(nextRankings) {
-  localStorage.setItem("moleRankings", JSON.stringify(nextRankings.slice(0, 10)));
+  localStorage.setItem("moleRankings", JSON.stringify(nextRankings));
 }
 
 function renderRankings() {
@@ -129,7 +131,7 @@ function renderRankings() {
     name.className = "rank-name";
     rankScore.className = "rank-score";
     position.textContent = index + 1;
-    name.textContent = rank.name;
+    name.textContent = selectedRankMode === "all" ? `${rank.name} · ${rank.difficulty}` : rank.name;
     rankScore.textContent = `${rank.score}점`;
 
     item.append(position, name, rankScore);
@@ -139,18 +141,24 @@ function renderRankings() {
 
 async function loadRankings() {
   if (!supabaseClient) {
-    rankings = getLocalRankings();
+    rankings = filterRankings(getLocalRankings());
     renderRankings();
     return;
   }
 
   rankStatusEl.textContent = "공용 랭킹 불러오는 중";
-  const { data, error } = await supabaseClient
+  let query = supabaseClient
     .from("mole_rankings")
     .select("name, score, difficulty, created_at")
     .order("score", { ascending: false })
     .order("created_at", { ascending: true })
     .limit(10);
+
+  if (selectedRankMode !== "all") {
+    query = query.eq("difficulty", selectedRankMode);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Supabase ranking load failed:", error);
@@ -169,6 +177,25 @@ async function loadRankings() {
   }));
   rankStatusEl.textContent = "공용 랭킹";
   renderRankings();
+}
+
+function filterRankings(nextRankings) {
+  const filtered = selectedRankMode === "all"
+    ? nextRankings
+    : nextRankings.filter((rank) => rank.difficulty === selectedRankMode);
+
+  return filtered
+    .slice()
+    .sort((a, b) => b.score - a.score || new Date(a.createdAt) - new Date(b.createdAt))
+    .slice(0, 10);
+}
+
+async function setRankMode(mode) {
+  selectedRankMode = mode;
+  rankTabs.forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.rankMode === mode);
+  });
+  await loadRankings();
 }
 
 function setRankFormEnabled(enabled) {
@@ -203,13 +230,14 @@ async function registerRanking(name) {
       return;
     }
 
-    await loadRankings();
+    await setRankMode(nextRank.difficulty);
   } else {
-    rankings.push(nextRank);
-    rankings.sort((a, b) => b.score - a.score || new Date(a.createdAt) - new Date(b.createdAt));
-    rankings = rankings.slice(0, 10);
-    saveLocalRankings(rankings);
-    renderRankings();
+    const localRankings = getLocalRankings();
+    localRankings.push(nextRank);
+    saveLocalRankings(
+      localRankings.sort((a, b) => b.score - a.score || new Date(a.createdAt) - new Date(b.createdAt))
+    );
+    await setRankMode(nextRank.difficulty);
   }
 
   setMessage(`${trimmedName} 님의 ${pendingScore}점 기록을 등록했습니다.`);
@@ -320,4 +348,10 @@ clearRankBtn.addEventListener("click", () => {
   rankings = [];
   renderRankings();
   setMessage("랭킹을 초기화했습니다.");
+});
+
+rankTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    setRankMode(tab.dataset.rankMode);
+  });
 });

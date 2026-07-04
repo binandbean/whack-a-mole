@@ -320,6 +320,28 @@ kbd {
   font-weight: 900;
 }
 
+.rank-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.rank-tab {
+  min-height: 38px;
+  border: 2px solid rgba(61, 38, 24, 0.24);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--soil-dark);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.rank-tab.active {
+  border-color: var(--soil-dark);
+  background: var(--sun);
+}
+
 .rank-list {
   display: grid;
   gap: 8px;
@@ -422,6 +444,10 @@ kbd {
 
   .rank-form {
     grid-template-columns: 1fr;
+  }
+
+  .rank-tabs {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   kbd {
