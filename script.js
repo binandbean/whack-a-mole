@@ -12,6 +12,7 @@ const saveRankBtn = document.querySelector("#saveRankBtn");
 const clearRankBtn = document.querySelector("#clearRankBtn");
 const rankListEl = document.querySelector("#rankList");
 const rankStatusEl = document.querySelector("#rankStatus");
+const holesByKey = new Map(holes.map((hole) => [hole.dataset.key || hole.dataset.index, hole]));
 
 const settings = {
   easy: { showFor: 760, delay: 360, duration: 30, label: "쉬움" },
@@ -305,7 +306,7 @@ window.addEventListener("keydown", (event) => {
 
   const index = Number(event.key);
   if (index >= 1 && index <= 9) {
-    hitHole(holes[index - 1]);
+    hitHole(holesByKey.get(event.key));
   }
 });
 
