@@ -153,7 +153,9 @@ async function loadRankings() {
     .limit(10);
 
   if (error) {
+    console.error("Supabase ranking load failed:", error);
     rankStatusEl.textContent = "공용 랭킹 연결 실패";
+    setMessage(`공용 랭킹 연결 실패: ${error.message || "Supabase 설정을 확인해 주세요."}`);
     rankings = [];
     renderRankings();
     return;
@@ -195,7 +197,8 @@ async function registerRanking(name) {
     });
 
     if (error) {
-      setMessage("공용 랭킹 등록에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      console.error("Supabase ranking insert failed:", error);
+      setMessage(`공용 랭킹 등록 실패: ${error.message || "Supabase 설정을 확인해 주세요."}`);
       saveRankBtn.disabled = false;
       return;
     }
