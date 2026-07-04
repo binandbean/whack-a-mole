@@ -320,28 +320,6 @@ kbd {
   font-weight: 900;
 }
 
-.rank-tabs {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.rank-tab {
-  min-height: 38px;
-  border: 2px solid rgba(61, 38, 24, 0.24);
-  border-radius: 8px;
-  background: #ffffff;
-  color: var(--soil-dark);
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.rank-tab.active {
-  border-color: var(--soil-dark);
-  background: var(--sun);
-}
-
 .rank-list {
   display: grid;
   gap: 8px;
@@ -352,7 +330,7 @@ kbd {
 
 .rank-list li {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
+  grid-template-columns: 40px minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
   min-height: 44px;
@@ -384,6 +362,17 @@ kbd {
   font-weight: 900;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.rank-difficulty {
+  min-width: 54px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(242, 184, 75, 0.32);
+  color: var(--soil-dark);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-align: center;
 }
 
 .rank-score {
@@ -446,8 +435,13 @@ kbd {
     grid-template-columns: 1fr;
   }
 
-  .rank-tabs {
-    grid-template-columns: repeat(2, 1fr);
+  .rank-list li {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+  }
+
+  .rank-difficulty {
+    grid-column: 2 / 3;
+    justify-self: start;
   }
 
   kbd {
