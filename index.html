@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>두더지 팡!</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="app" aria-label="두더지 팡 게임">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">Whack-a-Mole</p>
+          <h1>두더지 팡!</h1>
+        </div>
+        <div class="controls">
+          <label class="select-wrap">
+            <span>난이도</span>
+            <select id="difficulty">
+              <option value="easy">쉬움</option>
+              <option value="normal" selected>보통</option>
+              <option value="hard">어려움</option>
+            </select>
+          </label>
+          <button id="startBtn" class="primary">시작</button>
+        </div>
+      </section>
+
+      <section class="scoreboard" aria-label="게임 상태">
+        <div>
+          <span>점수</span>
+          <strong id="score">0</strong>
+        </div>
+        <div>
+          <span>시간</span>
+          <strong><span id="time">30</span>s</strong>
+        </div>
+        <div>
+          <span>콤보</span>
+          <strong id="combo">0</strong>
+        </div>
+        <div>
+          <span>최고점수</span>
+          <strong id="bestScore">0</strong>
+        </div>
+      </section>
+
+      <section class="game-wrap">
+        <div id="board" class="board" aria-label="두더지 구멍 9개">
+          <button class="hole" data-index="1" aria-label="1번 구멍"><span class="mole"></span><kbd>1</kbd></button>
+          <button class="hole" data-index="2" aria-label="2번 구멍"><span class="mole"></span><kbd>2</kbd></button>
+          <button class="hole" data-index="3" aria-label="3번 구멍"><span class="mole"></span><kbd>3</kbd></button>
+          <button class="hole" data-index="4" aria-label="4번 구멍"><span class="mole"></span><kbd>4</kbd></button>
+          <button class="hole" data-index="5" aria-label="5번 구멍"><span class="mole"></span><kbd>5</kbd></button>
+          <button class="hole" data-index="6" aria-label="6번 구멍"><span class="mole"></span><kbd>6</kbd></button>
+          <button class="hole" data-index="7" aria-label="7번 구멍"><span class="mole"></span><kbd>7</kbd></button>
+          <button class="hole" data-index="8" aria-label="8번 구멍"><span class="mole"></span><kbd>8</kbd></button>
+          <button class="hole" data-index="9" aria-label="9번 구멍"><span class="mole"></span><kbd>9</kbd></button>
+        </div>
+        <div id="message" class="message">시작을 누르고 튀어나오는 두더지를 잡아보세요.</div>
+      </section>
+
+      <section class="ranking" aria-label="랭킹">
+        <div class="ranking-head">
+          <div>
+            <h2>랭킹</h2>
+            <p id="rankStatus" class="rank-status">공용 랭킹 연결 확인 중</p>
+          </div>
+          <button id="clearRankBtn" class="ghost" type="button">초기화</button>
+        </div>
+        <form id="rankForm" class="rank-form">
+          <label for="nickname">닉네임</label>
+          <input id="nickname" type="text" maxlength="12" placeholder="닉네임 입력" autocomplete="off" disabled />
+          <button id="saveRankBtn" class="primary" type="submit" disabled>등록</button>
+        </form>
+        <ol id="rankList" class="rank-list"></ol>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./config.js"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>
