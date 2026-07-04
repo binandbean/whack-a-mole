@@ -143,7 +143,7 @@ function renderRankings() {
 
 async function loadRankings() {
   if (!supabaseClient) {
-    rankings = sortRankings(getLocalRankings()).slice(0, 10);
+    rankings = getBestRankings(getLocalRankings()).slice(0, 10);
     renderRankings();
     return;
   }
@@ -154,7 +154,7 @@ async function loadRankings() {
     .select("name, score, difficulty, created_at")
     .order("score", { ascending: false })
     .order("created_at", { ascending: true })
-    .limit(10);
+    .limit(100);
 
   if (error) {
     console.error("Supabase ranking load failed:", error);
@@ -165,12 +165,14 @@ async function loadRankings() {
     return;
   }
 
-  rankings = data.map((rank) => ({
-    name: rank.name,
-    score: rank.score,
-    difficulty: rank.difficulty,
-    createdAt: rank.created_at,
-  }));
+  rankings = getBestRankings(
+    data.map((rank) => ({
+      name: rank.name,
+      score: rank.score,
+      difficulty: rank.difficulty,
+      createdAt: rank.created_at,
+    }))
+  ).slice(0, 10);
   rankStatusEl.textContent = "공용 랭킹";
   renderRankings();
 }
@@ -179,6 +181,27 @@ function sortRankings(nextRankings) {
   return nextRankings
     .slice()
     .sort((a, b) => b.score - a.score || new Date(a.createdAt) - new Date(b.createdAt));
+}
+
+function getRankingKey(rank) {
+  return `${rank.name.trim()}::${rank.difficulty}`;
+}
+
+function getBestRankings(nextRankings) {
+  const bestByPlayer = new Map();
+
+  nextRankings.forEach((rank) => {
+    const key = getRankingKey(rank);
+    const currentBest = bestByPlayer.get(key);
+    const isBetterScore = !currentBest || rank.score > currentBest.score;
+    const isEarlierTie = currentBest && rank.score === currentBest.score && new Date(rank.createdAt) < new Date(currentBest.createdAt);
+
+    if (isBetterScore || isEarlierTie) {
+      bestByPlayer.set(key, rank);
+    }
+  });
+
+  return sortRankings([...bestByPlayer.values()]);
 }
 
 function setRankFormEnabled(enabled) {
@@ -200,6 +223,30 @@ async function registerRanking(name) {
 
   saveRankBtn.disabled = true;
   if (supabaseClient) {
+    const { data: existingRanks, error: lookupError } = await supabaseClient
+      .from("mole_rankings")
+      .select("score")
+      .eq("name", nextRank.name)
+      .eq("difficulty", nextRank.difficulty)
+      .order("score", { ascending: false })
+      .limit(1);
+
+    if (lookupError) {
+      console.error("Supabase ranking lookup failed:", lookupError);
+      setMessage(`기존 기록 확인 실패: ${lookupError.message || "Supabase 설정을 확인해 주세요."}`);
+      saveRankBtn.disabled = false;
+      return;
+    }
+
+    const bestExistingScore = existingRanks[0]?.score || 0;
+    if (bestExistingScore >= nextRank.score) {
+      setMessage(`${trimmedName} 님의 ${nextRank.difficulty} 최고 기록은 이미 ${bestExistingScore}점입니다.`);
+      pendingScore = 0;
+      nicknameEl.value = "";
+      setRankFormEnabled(false);
+      return;
+    }
+
     const { error } = await supabaseClient.from("mole_rankings").insert({
       name: nextRank.name,
       score: nextRank.score,
@@ -216,8 +263,17 @@ async function registerRanking(name) {
     await loadRankings();
   } else {
     const localRankings = getLocalRankings();
-    localRankings.push(nextRank);
-    saveLocalRankings(sortRankings(localRankings));
+    const bestExistingRank = getBestRankings(localRankings).find((rank) => getRankingKey(rank) === getRankingKey(nextRank));
+
+    if (bestExistingRank && bestExistingRank.score >= nextRank.score) {
+      setMessage(`${trimmedName} 님의 ${nextRank.difficulty} 최고 기록은 이미 ${bestExistingRank.score}점입니다.`);
+      pendingScore = 0;
+      nicknameEl.value = "";
+      setRankFormEnabled(false);
+      return;
+    }
+
+    saveLocalRankings(sortRankings([...localRankings, nextRank]));
     await loadRankings();
   }
 
